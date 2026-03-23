@@ -14,4 +14,3 @@ class SkillMetadata:
     tools: list[str] = field(default_factory=list)
     risk_level: RiskLevel = RiskLevel.LOW
     path: str = ""
-    source: str = "builtin"

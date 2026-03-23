@@ -55,6 +55,7 @@ temp/
 .env
 .env.*
 *.local
+.local/
 
 # Large or generated artifacts
 *.pt

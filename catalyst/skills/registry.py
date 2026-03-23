@@ -11,33 +11,38 @@ BUILTIN_SKILLS_DIR = Path(__file__).parent
 
 class SkillRegistry:
     def __init__(self, builtin_dir: Path | None = None, external_dir: Path | None = None) -> None:
-        self.builtin_dir = builtin_dir or BUILTIN_SKILLS_DIR
-        self.external_dir = external_dir
+        roots: list[Path] = []
+        if external_dir is not None:
+            roots.append(external_dir)
+        roots.append(builtin_dir or BUILTIN_SKILLS_DIR)
+        self.skill_roots = roots
 
-    def roots(self) -> list[tuple[str, Path]]:
-        roots: list[tuple[str, Path]] = [("builtin", self.builtin_dir)]
-        if self.external_dir is not None:
-            roots.append(("external", self.external_dir))
-        return roots
+    def roots(self) -> list[Path]:
+        return self.skill_roots
 
     def list_skills(self) -> list[SkillMetadata]:
         skills: list[SkillMetadata] = []
-        for source, root in self.roots():
+        seen_names: set[str] = set()
+        for root in self.roots():
             if not root.exists():
                 continue
             for skill_file in sorted(root.glob("*/SKILL.md")):
-                skills.append(self._load_metadata(skill_file, source))
+                metadata = self._load_metadata(skill_file)
+                if metadata.name in seen_names:
+                    continue
+                seen_names.add(metadata.name)
+                skills.append(metadata)
         return skills
 
     def get_skill(self, skill_name: str) -> SkillMetadata:
-        for source, root in self.roots():
+        for root in self.roots():
             skill_file = root / skill_name / "SKILL.md"
             if skill_file.exists():
-                return self._load_metadata(skill_file, source)
+                return self._load_metadata(skill_file)
         raise FileNotFoundError(f"Skill '{skill_name}' not found in configured skill roots")
 
     def load_skill_body(self, skill_name: str) -> str:
-        for _, root in self.roots():
+        for root in self.roots():
             skill_file = root / skill_name / "SKILL.md"
             if skill_file.exists():
                 _, body = self._parse_frontmatter(skill_file.read_text(encoding="utf-8"))
@@ -46,11 +51,11 @@ class SkillRegistry:
 
     def catalog_lines(self) -> list[str]:
         return [
-            f"- {skill.name}: {skill.description} | category={skill.category} | source={skill.source} | recommended_for={', '.join(skill.recommended_for) or 'none'}"
+            f"- {skill.name}: {skill.description} | category={skill.category} | recommended_for={', '.join(skill.recommended_for) or 'none'}"
             for skill in self.list_skills()
         ]
 
-    def _load_metadata(self, path: Path, source: str) -> SkillMetadata:
+    def _load_metadata(self, path: Path) -> SkillMetadata:
         frontmatter, _ = self._parse_frontmatter(path.read_text(encoding="utf-8"))
         return SkillMetadata(
             name=frontmatter.get("name", path.parent.name),
@@ -60,7 +65,6 @@ class SkillRegistry:
             tools=frontmatter.get("tools", []),
             risk_level=RiskLevel(frontmatter.get("risk_level", "low")),
             path=str(path),
-            source=source,
         )
 
     def _parse_frontmatter(self, content: str) -> tuple[dict, str]:

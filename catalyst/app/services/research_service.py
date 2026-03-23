@@ -11,6 +11,8 @@ from catalyst.orchestrator.loop_engine import LoopEngine
 from catalyst.orchestrator.next_action_selector import NextActionSelector
 from catalyst.orchestrator.prompt_registry import PromptRegistry
 from catalyst.models.research import ExperimentSpec, ResearchGoal
+from catalyst.plugins.ai4scholar import Ai4ScholarPlugin
+from catalyst.plugins.registry import PluginRegistry
 from catalyst.prompts.loader import render_research_agent_system_prompt
 from catalyst.skills.registry import SkillRegistry
 from catalyst.orchestrator.checkpoint_manager import CheckpointManager
@@ -38,6 +40,7 @@ class ResearchService:
         self.next_action_selector = NextActionSelector(self.memory)
         self.prompt_registry = PromptRegistry()
         self.skill_registry = SkillRegistry(external_dir=self.workspace / ".catalyst" / "skills")
+        self.plugin_registry = PluginRegistry()
         self.loop_engine = LoopEngine(
             workspace=self.workspace,
             memory=self.memory,
@@ -177,6 +180,27 @@ class ResearchService:
 
     def workspace_status(self) -> dict:
         return self.workspace_service.status()
+
+    def list_plugins(self) -> dict:
+        return {"plugins": [asdict(item) for item in self.plugin_registry.list_plugins()]}
+
+    def plugin_status(self, name: str) -> dict:
+        plugin = self.plugin_registry.get(name)
+        if isinstance(plugin, Ai4ScholarPlugin):
+            return Ai4ScholarPlugin.serialize(plugin.status())
+        raise NotImplementedError(f"Status is not implemented for plugin '{name}'.")
+
+    def ai4scholar_search_papers(self, query: str, limit: int) -> dict:
+        plugin = self.plugin_registry.get("ai4scholar")
+        return Ai4ScholarPlugin.serialize(plugin.search_papers(query=query, limit=limit))
+
+    def ai4scholar_get_paper(self, paper_id: str) -> dict:
+        plugin = self.plugin_registry.get("ai4scholar")
+        return Ai4ScholarPlugin.serialize(plugin.get_paper(paper_id=paper_id))
+
+    def ai4scholar_batch_get_papers(self, ids: list[str]) -> dict:
+        plugin = self.plugin_registry.get("ai4scholar")
+        return Ai4ScholarPlugin.serialize(plugin.batch_get_papers(ids=ids))
 
     def loop_once(self) -> dict:
         goal, state = self.load_current()

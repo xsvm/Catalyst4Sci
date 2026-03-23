@@ -20,6 +20,24 @@ def build_parser() -> argparse.ArgumentParser:
     workspace_status = workspace_subparsers.add_parser("status", help="Show workspace manifest status")
     workspace_status.add_argument("--workspace", default=".", help="Workspace path")
 
+    plugin_parser = subparsers.add_parser("plugin", help="Plugin commands")
+    plugin_subparsers = plugin_parser.add_subparsers(dest="plugin_command", required=True)
+    plugin_list = plugin_subparsers.add_parser("list", help="List available plugins")
+    plugin_list.add_argument("--workspace", default=".", help="Workspace path")
+    plugin_status = plugin_subparsers.add_parser("status", help="Show plugin status")
+    plugin_status.add_argument("--workspace", default=".", help="Workspace path")
+    plugin_status.add_argument("--name", required=True, help="Plugin name")
+    ai4scholar = plugin_subparsers.add_parser("ai4scholar", help="Ai4Scholar plugin operations")
+    ai4scholar.add_argument("--workspace", default=".", help="Workspace path")
+    ai4scholar_subparsers = ai4scholar.add_subparsers(dest="ai4scholar_command", required=True)
+    ai4scholar_search = ai4scholar_subparsers.add_parser("search-papers", help="Search papers via Ai4Scholar")
+    ai4scholar_search.add_argument("--query", required=True, help="Search query")
+    ai4scholar_search.add_argument("--limit", type=int, default=10, help="Result limit")
+    ai4scholar_paper = ai4scholar_subparsers.add_parser("get-paper", help="Get paper details via Ai4Scholar")
+    ai4scholar_paper.add_argument("--paper-id", required=True, dest="paper_id", help="Paper identifier")
+    ai4scholar_batch = ai4scholar_subparsers.add_parser("batch-get-papers", help="Batch get papers via Ai4Scholar")
+    ai4scholar_batch.add_argument("--paper-id", action="append", required=True, dest="paper_ids", help="Paper identifier; repeatable")
+
     start = research_subparsers.add_parser("start", help="Start a new research task")
     start.add_argument("--goal", required=True, help="Research goal title")
     start.add_argument("--description", default="", help="Research goal description")
@@ -70,6 +88,25 @@ def main() -> int:
     if args.command == "workspace" and args.workspace_command == "status":
         print_json(service.workspace_status())
         return 0
+
+    if args.command == "plugin" and args.plugin_command == "list":
+        print_json(service.list_plugins())
+        return 0
+
+    if args.command == "plugin" and args.plugin_command == "status":
+        print_json(service.plugin_status(args.name))
+        return 0
+
+    if args.command == "plugin" and args.plugin_command == "ai4scholar":
+        if args.ai4scholar_command == "search-papers":
+            print_json(service.ai4scholar_search_papers(args.query, args.limit))
+            return 0
+        if args.ai4scholar_command == "get-paper":
+            print_json(service.ai4scholar_get_paper(args.paper_id))
+            return 0
+        if args.ai4scholar_command == "batch-get-papers":
+            print_json(service.ai4scholar_batch_get_papers(args.paper_ids))
+            return 0
 
     if args.command == "research" and args.research_command == "start":
         result = service.start_research(
