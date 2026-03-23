@@ -7,7 +7,6 @@ from catalyst.agents.local_command import LocalCommandAgentAdapter
 from catalyst.experiments.runner import ExperimentRunner
 from catalyst.models.enums import ResearchStatus
 from catalyst.orchestrator.context_builder import ContextBuilder
-from catalyst.orchestrator.delegation_planner import DelegationPlanner
 from catalyst.orchestrator.loop_engine import LoopEngine
 from catalyst.orchestrator.next_action_selector import NextActionSelector
 from catalyst.orchestrator.prompt_registry import PromptRegistry
@@ -38,7 +37,6 @@ class ResearchService:
         self.context_builder = ContextBuilder(self.memory)
         self.next_action_selector = NextActionSelector(self.memory)
         self.prompt_registry = PromptRegistry()
-        self.delegation_planner = DelegationPlanner(self.memory, self.prompt_registry)
         self.skill_registry = SkillRegistry(external_dir=self.workspace / ".catalyst" / "skills")
         self.loop_engine = LoopEngine(
             workspace=self.workspace,
@@ -157,6 +155,11 @@ class ResearchService:
             context,
             decision,
             self.skill_registry.catalog_lines(),
+            [
+                f"- {item.name}: {item.description} | role={item.role} | recommended_for={', '.join(item.recommended_for) or 'none'}"
+                for item in self.prompt_registry.list_templates()
+                if item.role == "subagent"
+            ],
         )
         return {
             "prompt": prompt,
@@ -167,11 +170,6 @@ class ResearchService:
     def list_prompt_templates(self) -> dict:
         templates = [asdict(item) for item in self.prompt_registry.list_templates()]
         return {"templates": templates}
-
-    def plan_delegation(self) -> dict:
-        goal, state = self.load_current()
-        decision = self.delegation_planner.plan(goal, state)
-        return {"delegation": asdict(decision)}
 
     def list_skills(self) -> dict:
         skills = [asdict(item) for item in self.skill_registry.list_skills()]

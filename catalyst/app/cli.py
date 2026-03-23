@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from catalyst.app.services.research_service import ResearchService
@@ -46,7 +47,6 @@ def build_parser() -> argparse.ArgumentParser:
         ("prompt", "Render the current research system prompt"),
         ("prompts", "List available prompt templates"),
         ("skills", "List available skills without loading full skill bodies"),
-        ("plan-delegation", "Plan subagent delegation for the current state"),
         ("loop-once", "Run one autonomous research loop iteration"),
     ):
         sub = research_subparsers.add_parser(name, help=help_text)
@@ -56,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def print_json(payload: dict) -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
@@ -109,10 +111,6 @@ def main() -> int:
 
     if args.command == "research" and args.research_command == "skills":
         print_json(service.list_skills())
-        return 0
-
-    if args.command == "research" and args.research_command == "plan-delegation":
-        print_json(service.plan_delegation())
         return 0
 
     if args.command == "research" and args.research_command == "loop-once":

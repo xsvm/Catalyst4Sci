@@ -34,6 +34,7 @@ def render_research_agent_system_prompt(
     context: dict,
     decision: NextActionDecision,
     skill_catalog: list[str],
+    prompt_catalog: list[str],
 ) -> str:
     variables = {
         "goal_title": goal.title,
@@ -47,6 +48,7 @@ def render_research_agent_system_prompt(
         "recent_runs": json.dumps(context["L1"]["recent_runs"], ensure_ascii=False, indent=2),
         "recent_decisions": json.dumps(context["L1"]["recent_decisions"], ensure_ascii=False, indent=2),
         "skill_catalog": "\n".join(skill_catalog) if skill_catalog else "暂无可用技能。",
+        "prompt_catalog": "\n".join(prompt_catalog) if prompt_catalog else "暂无可用子代理模板。",
         "selected_action_type": decision.selected_action.action_type,
         "selected_action_title": decision.selected_action.title,
         "selected_action_description": decision.selected_action.description,

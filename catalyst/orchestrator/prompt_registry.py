@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from catalyst.models.delegation import PromptTemplateMetadata
 from catalyst.models.enums import RiskLevel
+from catalyst.models.prompt import PromptTemplateMetadata
 
 
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
