@@ -1,0 +1,83 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build / packaging
+build/
+dist/
+site/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Logs / runtime outputs
+*.log
+logs/
+
+# Local databases / local state
+*.db
+*.sqlite
+*.sqlite3
+.catalyst/
+
+# Temp / cache
+.cache/
+tmp/
+temp/
+.tmp/
+
+# Secrets / env
+.env
+.env.*
+*.local
+
+# Large or generated artifacts
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.onnx
+*.parquet
+*.npy
+*.npz
+
+# External project local outputs
+external/**/__pycache__/
+external/**/.venv/
+external/**/venv/
+external/**/.pytest_cache/
+external/**/.mypy_cache/
+external/**/.ruff_cache/
+external/**/build/
+external/**/dist/
+external/**/tmp/
+external/**/temp/
+external/**/.cache/
+
+# Safety: ignore any accidental temp shallow clone remnants
+.tmp_autoresearch_clone/
